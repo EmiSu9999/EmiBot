@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func fetchImage(tag string) string {
+func fetchImageDanbooru(tag string) string {
 	if Global.DanbooruLogin == "" || Global.DanbooruAPIKey == "" {
 		return `Error: Can't do API requests without both a Danbooru Login & API key. https://danbooru.donmai.us/wiki_pages/43568`
 	}
