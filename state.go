@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func InitGlobal() {
@@ -66,13 +67,21 @@ func InitCustomResponses() {
 	// Errors are ignored here, as there is no way they should happen, as the existence of the file has already been tested for
 	jsonBytes, _ := ioutil.ReadAll(jsonFile)
 
+	// create a temporary map, to hold the keys before making lowercase
+	temporaryMap := make(map[string]string)
+
 	// Unmarshal into CustomResponses map
-	err = json.Unmarshal(jsonBytes, &CustomResponses)
+	err = json.Unmarshal(jsonBytes, &temporaryMap)
 
 	// Error handling in case json is invalid
 	if err != nil {
 		fmt.Println(err, ", no custom responses were loaded. custom_responses.json might be malformed.")
 		return
+	}
+
+	// Make everything lowercase
+	for k, v := range temporaryMap {
+		CustomResponses[strings.Title(k)] = v
 	}
 }
 
