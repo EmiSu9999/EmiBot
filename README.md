@@ -1,6 +1,6 @@
-# tewibot
+# EmiBot
 
-A Discord bot for waifufriends; the spiritual successor to the lainbot family.
+EmiBot is a fork of Tewibot, a bot for waifufriends; the spiritual successor to the lainbot family.
 
 ## features
 
