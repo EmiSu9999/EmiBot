@@ -91,6 +91,7 @@ var Usages map[string]string
 var Comforts []string
 var ChildComforts []string
 var ChildReverseComforts []string
+var CustomResponses map[string]string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
 	fmt.Printf("me -> %s: %s\n", m.ChannelID, msg)
@@ -614,7 +615,7 @@ func themeAddOrGet(s *discordgo.Session, m *discordgo.MessageCreate) {
 						reply(s, m, fmt.Sprintf("Adding a theme for %s - %s",
 							wname, pic))
 						waifu.Theme = pic
-                                                SaveGlobal()
+						SaveGlobal()
 					} else if waifu.Theme == "" {
 						reply(s, m, "No theme found, you can add one with the theme command")
 					} else {
@@ -634,7 +635,7 @@ func themeAddOrGet(s *discordgo.Session, m *discordgo.MessageCreate) {
 						reply(s, m, fmt.Sprintf("Adding a theme for %s - %s",
 							wname, pic))
 						c.Theme = pic
-                                                SaveGlobal()
+						SaveGlobal()
 					} else if c.Theme == "" {
 						reply(s, m, "No theme found, you can add one with the theme command")
 					} else {
@@ -700,29 +701,30 @@ func addCommand(c BotCmd, usage string, aliases ...string) {
 }
 
 func addPrompt(s *discordgo.Session, m *discordgo.MessageCreate) {
-	reply (s, m, "This feature is currently being worked on, for now if you wish to add comfort prompts to the bot please contact the admin")
+	reply(s, m, "This feature is currently being worked on, for now if you wish to add comfort prompts to the bot please contact the admin")
 }
 
 func addCPrompt(s *discordgo.Session, m *discordgo.MessageCreate) {
-	reply (s, m, "This feature is currently being worked on, for now if you wish to add comfort prompts to the bot please contact the admin")
+	reply(s, m, "This feature is currently being worked on, for now if you wish to add comfort prompts to the bot please contact the admin")
 }
 
 func writePrompt(s *discordgo.Session, m *discordgo.MessageCreate) {
-	reply (s, m, "A guide for writing prompts can be found at ")
+	reply(s, m, "A guide for writing prompts can be found at ")
 }
 
 func stateTitin(s *discordgo.Session, m *discordgo.MessageCreate) {
-	reply (s, m, "Methionylthreonylthreonylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylglutaminylleucyllysylglutamylarginyllysylglutamylglycylalanylphenylalanylvalylprolylphenylalanylvalylthreonylleucylglycylaspartylprolylglycylisoleucylglutamylglutaminylserylleucyllysylisoleucylaspartylthreonylleucylisoleucylglutamylalanylglycylalanylaspartylalanylleucylglutamylleucylglycylisoleucylprolylphenylalanylserylaspartylprolylleucylalanylaspartylglycylprolylthreonylisoleucylglutaminylasparaginylalanylthreonylleucylarginylalanylphenylalanylalanylalanylglycylvalylthreonylprolylalanylglutaminylcysteinylphenylalanylglutamylmethionylleucylalanylleucylisoleucylarginylglutaminyllysylhistidylprolylthreonylisoleucylprolylisoleucylglycylleucylleucylmethionyltyrosylalanylasparaginylleucylvalylphenylalanylasparaginyllysylglycylisoleucylaspartylglutamylphenylalanyltyrosylalanylglutaminylcysteinylglutamyllysylvalylglycylvalylaspartylserylvalylleucylvalylalanylaspartylvalylprolylvalylglutaminylglutamylserylalanylprolylphenylalanylarginylglutaminylalanylalanylleucylarginylhistidylasparaginylvalylalanylprolylisoleucylphenylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylvalylglutaminylprolylmethionyllysylalanylalanylthreonylarginylacetylseryltyrosylserylisoleucylthreo")
-	reply (s, m, "nylserylprolylserylglutaminylphenylalanylvalylphenylalanylleucylserylserylvalyltryptophylalanylaspartylprolylisoleucylglutamylleucylleucylasparaginylvalylcysteinylthreonylserylserylleucylglycylasparaginylglutaminylphenylalanylglutaminylthreonylglutaminylglutaminylalanylarginylthreonylthreonylglutaminylvalylglutaminylglutaminylphenylalanylserylglutaminylvalyltryptophyllysylprolylphenylalanylprolylglutaminylserylthreonylvalylarginylphenylalanylprolylglycylaspartylvalyltyrosyllysylvalyltyrosylarginyltyrosylasparaginylalanylvalylleucylaspartylprolylleucylisoleucylthreonylalanylleucylleucylglycylthreonylphenylalanylaspartylthreonylarginylasparaginylarginylisoleucylisoleucylglutamylvalylglutamylasparaginylglutaminylglutaminylserylprolylthreonylthreonylalanylglutamylthreonylleucylaspartylalanylthreonylarginylarginylvalylaspartylaspartylalanylthreonylvalylalanylisoleucylarginylserylalanylasparaginylisoleucylasparaginylleucylvalylasparaginylglutamylleucylvalylarginylglycylthreonylglycylleucyltyrosylasparaginylglutaminylasparaginylthreonylphenylalanylglutamylserylmethionylserylglycylleucylvalyltryptophylthreonylserylalanylprolylalanyltitinmethionylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylv")
+	reply(s, m, "Methionylthreonylthreonylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylglutaminylleucyllysylglutamylarginyllysylglutamylglycylalanylphenylalanylvalylprolylphenylalanylvalylthreonylleucylglycylaspartylprolylglycylisoleucylglutamylglutaminylserylleucyllysylisoleucylaspartylthreonylleucylisoleucylglutamylalanylglycylalanylaspartylalanylleucylglutamylleucylglycylisoleucylprolylphenylalanylserylaspartylprolylleucylalanylaspartylglycylprolylthreonylisoleucylglutaminylasparaginylalanylthreonylleucylarginylalanylphenylalanylalanylalanylglycylvalylthreonylprolylalanylglutaminylcysteinylphenylalanylglutamylmethionylleucylalanylleucylisoleucylarginylglutaminyllysylhistidylprolylthreonylisoleucylprolylisoleucylglycylleucylleucylmethionyltyrosylalanylasparaginylleucylvalylphenylalanylasparaginyllysylglycylisoleucylaspartylglutamylphenylalanyltyrosylalanylglutaminylcysteinylglutamyllysylvalylglycylvalylaspartylserylvalylleucylvalylalanylaspartylvalylprolylvalylglutaminylglutamylserylalanylprolylphenylalanylarginylglutaminylalanylalanylleucylarginylhistidylasparaginylvalylalanylprolylisoleucylphenylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylvalylglutaminylprolylmethionyllysylalanylalanylthreonylarginylacetylseryltyrosylserylisoleucylthreo")
+	reply(s, m, "nylserylprolylserylglutaminylphenylalanylvalylphenylalanylleucylserylserylvalyltryptophylalanylaspartylprolylisoleucylglutamylleucylleucylasparaginylvalylcysteinylthreonylserylserylleucylglycylasparaginylglutaminylphenylalanylglutaminylthreonylglutaminylglutaminylalanylarginylthreonylthreonylglutaminylvalylglutaminylglutaminylphenylalanylserylglutaminylvalyltryptophyllysylprolylphenylalanylprolylglutaminylserylthreonylvalylarginylphenylalanylprolylglycylaspartylvalyltyrosyllysylvalyltyrosylarginyltyrosylasparaginylalanylvalylleucylaspartylprolylleucylisoleucylthreonylalanylleucylleucylglycylthreonylphenylalanylaspartylthreonylarginylasparaginylarginylisoleucylisoleucylglutamylvalylglutamylasparaginylglutaminylglutaminylserylprolylthreonylthreonylalanylglutamylthreonylleucylaspartylalanylthreonylarginylarginylvalylaspartylaspartylalanylthreonylvalylalanylisoleucylarginylserylalanylasparaginylisoleucylasparaginylleucylvalylasparaginylglutamylleucylvalylarginylglycylthreonylglycylleucyltyrosylasparaginylglutaminylasparaginylthreonylphenylalanylglutamylserylmethionylserylglycylleucylvalyltryptophylthreonylserylalanylprolylalanyltitinmethionylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylv")
 }
 
 func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
-	reply (s, m, "https://discord.gg/ZmqQGAK")
+	reply(s, m, "https://discord.gg/ZmqQGAK")
 }
 
 func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
+	CustomResponses = make(map[string]string)
 	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
 	addCommand(waifuDel, "Delete a previously registered waifu", "waifudel", "husbandodel", "spousedel")
 	addCommand(childDel, "Delete a previously registered child", "daughterdel", "sondel", "childdel")
@@ -749,6 +751,7 @@ func init() {
 	addCommand(postInvite, "Posts an invite to EmiBot's own server", "invite")
 	InitGlobal()
 	InitComforts()
+	InitCustomResponses()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.StringVar(&AdminID, "a", "", "Admin's Discord ID")
@@ -760,13 +763,13 @@ func init() {
 		log.SetFlags(log.Ldate | log.Ltime | log.LUTC)
 		logRotate()
 	}
-	
+
 	// Let's see you ROTC leeches coming up with regexes even half this good. -- Kona
 	regexWaifuAffection = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*lo+ve|ne+d|wa+nt|a+do+r+e+) (my )?([^.,!?]*)")
 	regexSpouseMulti = regexp.MustCompile("wa*i+f[ue]*s*|gi+r+l+fri+e+nd*s*|h[au]+[sz]u*bandos*|bo+yfri+e+nd*s*|spo+u+s+e*s*|da+te+ma+te*s*")
-	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+") 
-	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+") 
-	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+") 
+	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+")
+	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+")
+	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+")
 }
 
 var logfile *os.File = nil
@@ -858,194 +861,38 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		logMsg("[%s] %s (%s) -> %s (%s): %s\n", ch.GuildID, m.Author.Username, m.Author.ID, ch.Name, m.ChannelID, m.Content)
 	}
 
-	// If the message is "ping" reply with "Pong!"
-	if m.Content == "ping" {
-		reply(s, m, "Pong!")
-	}
-	
-	// If the message is "pong" reply with "Ping!"
-	if m.Content == "pong" {
-		reply(s, m, "Ping!")
-	}
-	
-	// If the message is "Re:Creators" reply with "sucks"
-	if m.Content == "Re:Creators" {
-		reply(s, m, "sucks")
-	}
-	
-	// If the message is "To" reply with "ga"
-	if m.Content == "To" {
-		reply(s, m, "ga")
-	}
-	
-	// If the message is "Jei" reply with "do"
-	if m.Content == "Jei" {
-		reply(s, m, "do")
-	}
-	
-	// If the message is "Soup" reply with "Soup store"
-	if m.Content == "Soup" {
-		reply(s, m, "https://www.youtube.com/watch?v=FAUnDDTz30k")
-	}
-	
-	// If the message is "Su" reply with "sie"
-	if m.Content == "Su" {
-		reply(s, m, "sie")
-	}
-	
-	// If the message is "Saki" reply with "Nikaido"
-	if m.Content == "Saki" {
-		reply(s, m, "Nikaido")
-	}
-	
-	// If the message is "Pi" reply with "ers"
-	if m.Content == "Pi" {
-		reply(s, m, "ers")
-	}
-	
-	// If the message is "Fo" reply with "xy"
-	if m.Content == "Fo" {
-		reply(s, m, "xy")
-	}
-	
-	// If the message is "Coy" reply with "le"
-	if m.Content == "Coy" {
-		reply(s, m, "le")
-	}
-	
-	// If the message is "Coi" reply with "fish"
-	if m.Content == "Coi" {
-		reply(s, m, ":fish:")
-	}
-	
-	// If the message is "Mitsu" reply with "ha"
-	if m.Content == "Mitsu" {
-		reply(s, m, "ha")
-	}
-	
-	// If the message is "Carl" reply with "bot"
-	if m.Content == "Carl" {
-		reply(s, m, "bot")
-	}
-	
-	// If the message is "ge" reply with "no"
-	if m.Content == "ge" {
-		reply(s, m, "no")
-	}
-	
-	// If the message is "saka" reply with "zuki"
-	if m.Content == "saka" {
-		reply(s, m, "zuki")
-	}
-	
-	// If the message is "Emi" reply with "lia"
-	if m.Content == "Emi" {
-		reply(s, m, "lia")
-	}
-	
-	// If the message is "fu" reply with "to"
-	if m.Content == "fu" {
-		reply(s, m, "to")
-	}
-	
-	// If the message is "nya" reply with "Nya~"
-	if m.Content == "nya" {
-		reply(s, m, "Nya~")
+	// Check if CustomResponses map contains message, reply with the according value if so
+	// response contains the actual response, whole found is used to determine if key exists in the first place
+	if response, found := CustomResponses[m.Content]; found {
+		reply(s, m, response)
 	}
 
-	// If the message is "sumi" reply with "reko"
-	if m.Content == "sumi" {
-		reply(s, m, "reko")
-	}
-	
-	// If the message is "Mon" reply with "ika"
-	if m.Content == "Mon" {
-		reply(s, m, "ika")
-	}
-
-	// If the message is "ayy" reply with "lmao"
-	if m.Content == "ayy" {
-		reply(s, m, "lmao")
-	}
-	
-	// If the message is "awoo" reply with "awoo"
-	if m.Content == "awoo" {
-		reply(s, m, "awoo")
-	}
-	
-	// If the message is "unyu" reply with "unyu~"
-	if m.Content == "unyu" {
-		reply(s, m, "unyu~")
-	}
-	
-	// If the message is "ri" reply with "na"
-	if m.Content == "ri" {
-		reply(s, m, "na")
-	}
-	
-	// If the message is "Mar" reply with "nie"
-	if m.Content == "Mar" {
-		reply(s, m, "nie")
-	}
-	
-	// If the message is "lewd" reply with "lewd gif"
-	if m.Content == "lewd" {
-		reply(s, m, "https://tenor.com/Xlv1.gif")
-	}
-	
-	// If the message is "Mari" reply with "sa"
-	if m.Content == "Mari" {
-		reply(s, m, "sa")
-	}
-	
-		// If the message is "Megu" reply with "min"
-	if m.Content == "Megu" {
-		reply(s, m, "min")
-	}
-	
-	// If the message is "Fu" reply with "taba"
-	if m.Content == "Fu" {
-		reply(s, m, "taba")
-	}
-	
-	// If the message is "Plush" reply with "ika"
-	if m.Content == "Plush" {
-		reply(s, m, "ika")
-	}
-	
-
-	
-	// Informal standard
-	if m.Content == ".bots" {
-		reply(s, m, "EmiBot reporting in! [Golang] https://github.com/EmiSu9999/EmiBot")
-	}
-	
-	if mat := regexWaifuAffection.FindStringSubmatch(m.Content); mat != nil { 
-			affectionVerb := mat[1] 
-			spouseOrName := mat[4]
-			if len(spouseOrName) == 0 { 
-					return
-			}
-			if regexSpouseMulti.MatchString(spouseOrName) {
-					reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
-			} else if regexSpouseNB.MatchString(spouseOrName) {
-					reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
-			} else if regexSpouseMasc.MatchString(spouseOrName) { 
-					reply(s, m, fmt.Sprintf("I'm sure he %ss you too!", affectionVerb))
-			} else if regexSpouseFem.MatchString(spouseOrName) { 
-					reply(s, m, fmt.Sprintf("I'm sure she %ss you too!", affectionVerb))
-			} else {
-					adduserifne(m)
-					if Global.Users[m.Author.ID].Waifus != nil { 
-							u := Global.Users[m.Author.ID] 
-							for _, waifu := range u.Waifus { 
-									if waifu.Name == spouseOrName { 
-											reply(s, m, fmt.Sprintf("%s %ss you too!", waifu.Name, affectionVerb)) 
-											return
-									}
-							}
+	if mat := regexWaifuAffection.FindStringSubmatch(m.Content); mat != nil {
+		affectionVerb := mat[1]
+		spouseOrName := mat[4]
+		if len(spouseOrName) == 0 {
+			return
+		}
+		if regexSpouseMulti.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
+		} else if regexSpouseNB.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
+		} else if regexSpouseMasc.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure he %ss you too!", affectionVerb))
+		} else if regexSpouseFem.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure she %ss you too!", affectionVerb))
+		} else {
+			adduserifne(m)
+			if Global.Users[m.Author.ID].Waifus != nil {
+				u := Global.Users[m.Author.ID]
+				for _, waifu := range u.Waifus {
+					if waifu.Name == spouseOrName {
+						reply(s, m, fmt.Sprintf("%s %ss you too!", waifu.Name, affectionVerb))
+						return
 					}
+				}
 			}
+		}
 	}
 
 	if len(m.Content) > len(Global.CommandPrefix) {
