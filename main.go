@@ -46,6 +46,7 @@ var regexWaifuAffection *regexp.Regexp
 var regexSpouseNB *regexp.Regexp
 var regexSpouseMasc *regexp.Regexp
 var regexSpouseFem *regexp.Regexp
+var regexSpouseMulti *regexp.Regexp
 
 type Human interface {
 	GetName() string
@@ -111,6 +112,7 @@ func setIntro(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if len(words) > 1 {
 		u.Intro = strings.Join(words[1:], " ")
 		reply(s, m, fmt.Sprintf("Setting %s's intro to %s", u.Nickname, u.Intro))
+		SaveGlobal()
 	} else {
 		reply(s, m, fmt.Sprintf("%s", u.Intro))
 	}
@@ -131,7 +133,7 @@ func danbooruPic(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if len(words) <= 1 {
 		reply(s, m, "Please specify a tag to search on Danbooru")
 	} else {
-		reply(s, m, fetchImage(words[1]))
+		reply(s, m, fetchImageDanbooru(words[1]))
 	}
 }
 
@@ -146,7 +148,7 @@ func getWaifuPic(s *discordgo.Session, m *discordgo.MessageCreate) {
 				if wifu.Tag == "" {
 					reply(s, m, fmt.Sprintf("Set a tag to use when looking for pictures of %s - &tag some_tag %s", wname, wname))
 				} else {
-					reply(s, m, fetchImage(wifu.Tag))
+					reply(s, m, fetchImageDanbooru(wifu.Tag))
 				}
 			}
 		}
@@ -155,7 +157,7 @@ func getWaifuPic(s *discordgo.Session, m *discordgo.MessageCreate) {
 				if wifu.Tag == "" {
 					reply(s, m, fmt.Sprintf("Set a tag to use when looking for pictures of %s - &tag some_tag %s", wname, wname))
 				} else {
-					reply(s, m, fetchImage(wifu.Tag))
+					reply(s, m, fetchImageDanbooru(wifu.Tag))
 				}
 			}
 		}
@@ -174,7 +176,7 @@ func getWaifuPic(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if len(tags) == 0 {
 			reply(s, m, "Either you don't have any family members set, or none of your family members have danbooru tags.")
 		} else {
-			reply(s, m, fetchImage(randoms(tags)))
+			reply(s, m, fetchImageDanbooru(randoms(tags)))
 		}
 	}
 }
@@ -353,6 +355,7 @@ func nickname(s *discordgo.Session, m *discordgo.MessageCreate) {
 		newnick := strings.Join(words[1:], " ")
 		reply(s, m, fmt.Sprintf("Setting %s's nickname to %s", u.Nickname, newnick))
 		u.Nickname = newnick
+		SaveGlobal()
 	} else {
 		reply(s, m, fmt.Sprintf("Your nickname is %s", u.Nickname))
 	}
@@ -372,6 +375,7 @@ func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		u.Gender = gen
 		reply(s, m, fmt.Sprintf("Setting %s's gender to %s", u.Nickname, Gender[gen]))
+		SaveGlobal()
 	} else {
 		reply(s, m, fmt.Sprintf("%s's gender is %s", u.Nickname, Gender[u.Gender]))
 	}
@@ -448,6 +452,7 @@ func waifuDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 					copy(u.Waifus[i:], u.Waifus[i+1:])
 					u.Waifus[len(u.Waifus)-1] = nil // or the zero value of T
 					u.Waifus = u.Waifus[:len(u.Waifus)-1]
+					SaveGlobal()
 					return
 				}
 			}
@@ -479,6 +484,7 @@ func childDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 					copy(u.Children[i:], u.Children[i+1:])
 					u.Children[len(u.Children)-1] = nil // or the zero value of T
 					u.Children = u.Children[:len(u.Children)-1]
+					SaveGlobal()
 					return
 				}
 			}
@@ -547,6 +553,7 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
 		fmt.Println(m.Author.ID, spouse, wname)
+		SaveGlobal()
 	}
 }
 
@@ -574,6 +581,7 @@ func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, child, wname))
 		fmt.Println(m.Author.ID, child, wname)
+		SaveGlobal()
 	}
 }
 
@@ -606,6 +614,7 @@ func themeAddOrGet(s *discordgo.Session, m *discordgo.MessageCreate) {
 						reply(s, m, fmt.Sprintf("Adding a theme for %s - %s",
 							wname, pic))
 						waifu.Theme = pic
+                                                SaveGlobal()
 					} else if waifu.Theme == "" {
 						reply(s, m, "No theme found, you can add one with the theme command")
 					} else {
@@ -625,6 +634,7 @@ func themeAddOrGet(s *discordgo.Session, m *discordgo.MessageCreate) {
 						reply(s, m, fmt.Sprintf("Adding a theme for %s - %s",
 							wname, pic))
 						c.Theme = pic
+                                                SaveGlobal()
 					} else if c.Theme == "" {
 						reply(s, m, "No theme found, you can add one with the theme command")
 					} else {
@@ -653,7 +663,7 @@ func help(s *discordgo.Session, m *discordgo.MessageCreate) {
 				cmd, Usages[cmd]))
 		}
 	} else {
-		rep := "tewibot - a spiritual successor to the lainbot family of irc bots.\nSupported commands (type &help _command_ for usage text):\n"
+		rep := "EmiBot is based on tewibot - a spiritual successor to the lainbot family of irc bots.\nSupported commands (type &help _command_ for usage text):\n"
 		for key, _ := range Commands {
 			rep += Global.CommandPrefix + key + ", "
 		}
@@ -689,6 +699,27 @@ func addCommand(c BotCmd, usage string, aliases ...string) {
 	}
 }
 
+func addPrompt(s *discordgo.Session, m *discordgo.MessageCreate) {
+	reply (s, m, "This feature is currently being worked on, for now if you wish to add comfort prompts to the bot please contact the admin")
+}
+
+func addCPrompt(s *discordgo.Session, m *discordgo.MessageCreate) {
+	reply (s, m, "This feature is currently being worked on, for now if you wish to add comfort prompts to the bot please contact the admin")
+}
+
+func writePrompt(s *discordgo.Session, m *discordgo.MessageCreate) {
+	reply (s, m, "A guide for writing prompts can be found at ")
+}
+
+func stateTitin(s *discordgo.Session, m *discordgo.MessageCreate) {
+	reply (s, m, "Methionylthreonylthreonylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylglutaminylleucyllysylglutamylarginyllysylglutamylglycylalanylphenylalanylvalylprolylphenylalanylvalylthreonylleucylglycylaspartylprolylglycylisoleucylglutamylglutaminylserylleucyllysylisoleucylaspartylthreonylleucylisoleucylglutamylalanylglycylalanylaspartylalanylleucylglutamylleucylglycylisoleucylprolylphenylalanylserylaspartylprolylleucylalanylaspartylglycylprolylthreonylisoleucylglutaminylasparaginylalanylthreonylleucylarginylalanylphenylalanylalanylalanylglycylvalylthreonylprolylalanylglutaminylcysteinylphenylalanylglutamylmethionylleucylalanylleucylisoleucylarginylglutaminyllysylhistidylprolylthreonylisoleucylprolylisoleucylglycylleucylleucylmethionyltyrosylalanylasparaginylleucylvalylphenylalanylasparaginyllysylglycylisoleucylaspartylglutamylphenylalanyltyrosylalanylglutaminylcysteinylglutamyllysylvalylglycylvalylaspartylserylvalylleucylvalylalanylaspartylvalylprolylvalylglutaminylglutamylserylalanylprolylphenylalanylarginylglutaminylalanylalanylleucylarginylhistidylasparaginylvalylalanylprolylisoleucylphenylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylvalylglutaminylprolylmethionyllysylalanylalanylthreonylarginylacetylseryltyrosylserylisoleucylthreo")
+	reply (s, m, "nylserylprolylserylglutaminylphenylalanylvalylphenylalanylleucylserylserylvalyltryptophylalanylaspartylprolylisoleucylglutamylleucylleucylasparaginylvalylcysteinylthreonylserylserylleucylglycylasparaginylglutaminylphenylalanylglutaminylthreonylglutaminylglutaminylalanylarginylthreonylthreonylglutaminylvalylglutaminylglutaminylphenylalanylserylglutaminylvalyltryptophyllysylprolylphenylalanylprolylglutaminylserylthreonylvalylarginylphenylalanylprolylglycylaspartylvalyltyrosyllysylvalyltyrosylarginyltyrosylasparaginylalanylvalylleucylaspartylprolylleucylisoleucylthreonylalanylleucylleucylglycylthreonylphenylalanylaspartylthreonylarginylasparaginylarginylisoleucylisoleucylglutamylvalylglutamylasparaginylglutaminylglutaminylserylprolylthreonylthreonylalanylglutamylthreonylleucylaspartylalanylthreonylarginylarginylvalylaspartylaspartylalanylthreonylvalylalanylisoleucylarginylserylalanylasparaginylisoleucylasparaginylleucylvalylasparaginylglutamylleucylvalylarginylglycylthreonylglycylleucyltyrosylasparaginylglutaminylasparaginylthreonylphenylalanylglutamylserylmethionylserylglycylleucylvalyltryptophylthreonylserylalanylprolylalanyltitinmethionylglutaminylarginyltyrosylglutamylserylleucylphenylalanylalanylisoleucylcysteinylprolylprolylaspartylalanylaspartylaspartylaspartylleucylleucylarginylglutaminylisoleucylalanylseryltyrosylglycylarginylglycyltyrosylthreonyltyrosylleucylleucylserylarginylalanylglycylvalylthreonylglycylalanylglutamylasparaginylarginylalanylalanylleucylprolylleucylasparaginylhistidylleucylvalylalanyllysylleucyllysylglutamyltyrosylasparaginylalanylalanylprolylprolylleucylglutaminylglycylphenylalanylglycylisoleucylserylalanylprolylaspartylglutaminylvalyllysylalanylalanylisoleucylaspartylalanylglycylalanylalanylglycylalanylisoleucylserylglycylserylalanylisoleucylvalyllysylisoleucylisoleucylglutamylglutaminylhistidylasparaginylisoleucylglutamylprolylglutamyllysylmethionylleucylalanylalanylleucyllysylvalylphenylalanylv")
+}
+
+func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
+	reply (s, m, "https://discord.gg/ZmqQGAK")
+}
+
 func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
@@ -697,7 +728,7 @@ func init() {
 	addCommand(childDel, "Delete a previously registered child", "daughterdel", "sondel", "childdel")
 	addCommand(getGender, "Print your (or someone else's) gender", "gender", "getgender")
 	addCommand(getWaifu, "Print your (or someone else's) waifu", "waifu", "husbando", "spouse")
-	addCommand(comfort, "Dispense hugs and other niceness from your waifu", "comfort", "hug")
+	addCommand(comfort, "Dispense hugs and other niceness from your waifu", "comfort", "hug", "cimfirt")
 	addCommand(rcomfort, "Dispense hugs and other niceness to your waifu", "rcomfort", "rhug")
 	addCommand(ccomfort, "Dispense hugs and other niceness from your child", "ccomfort", "dcomfort", "chug", "dhug")
 	addCommand(crcomfort, "Dispense hugs and other niceness to your child", "crcomfort", "drcomfort", "crhug", "drhug")
@@ -709,10 +740,13 @@ func init() {
 	addCommand(adminInfo, "Print information about the admin", "admin")
 	addCommand(waifuPicAdd, "Add a picture to your waifu; e.g. &picadd http://i.imgur.com/Gqf1rGi.jpg Miku", "picadd")
 	addCommand(danbooruPic, "Fetch an image with the given tag from danbooru", "danbooru")
-	addCommand(waifuTagAdd, "Set your child or waifu's tag to use when searching danbooru", "tag")
-	addCommand(getWaifuPic, "Get an image of your waifu or child from danbooru", "pic")
+	addCommand(waifuTagAdd, "Set your child or waifu's tag to use when searching danbooru, &tag [tag on danbooru] [name of character]", "tag")
+	addCommand(getWaifuPic, "Get an image of your waifu or child from danbooru", "pic", "pix")
 	addCommand(setIntro, "Set or display your introduction", "intro")
+	addCommand(addPrompt, "Adds a SO-related comfort prompt to the bot", "prompt", "addprompt")
+	addCommand(addCPrompt, "Adds a kidfu-related comfort prompt to the bot", "cprompt", "caddprompt")
 	addCommand(themeAddOrGet, "Set or get your waifu or child's theme, e.g. &theme https://www.youtube.com/watch?v=U_CfriU4Cng Miku", "theme")
+	addCommand(postInvite, "Posts an invite to EmiBot's own server", "invite")
 	InitGlobal()
 	InitComforts()
 
@@ -726,12 +760,13 @@ func init() {
 		log.SetFlags(log.Ldate | log.Ltime | log.LUTC)
 		logRotate()
 	}
-
+	
 	// Let's see you ROTC leeches coming up with regexes even half this good. -- Kona
 	regexWaifuAffection = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*lo+ve|ne+d|wa+nt|a+do+r+e+) (my )?([^.,!?]*)")
-	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+")
-	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+")
-	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+")
+	regexSpouseMulti = regexp.MustCompile("wa*i+f[ue]*s*|gi+r+l+fri+e+nd*s*|h[au]+[sz]u*bandos*|bo+yfri+e+nd*s*|spo+u+s+e*s*|da+te+ma+te*s*")
+	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+") 
+	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+") 
+	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+") 
 }
 
 var logfile *os.File = nil
@@ -827,41 +862,190 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Content == "ping" {
 		reply(s, m, "Pong!")
 	}
-
+	
 	// If the message is "pong" reply with "Ping!"
 	if m.Content == "pong" {
 		reply(s, m, "Ping!")
 	}
-
-	// Informal standard
-	if m.Content == ".bots" {
-		reply(s, m, "tewibot reporting in! [Golang] https://github.com/japanoise/tewibot")
+	
+	// If the message is "Re:Creators" reply with "sucks"
+	if m.Content == "Re:Creators" {
+		reply(s, m, "sucks")
+	}
+	
+	// If the message is "To" reply with "ga"
+	if m.Content == "To" {
+		reply(s, m, "ga")
+	}
+	
+	// If the message is "Jei" reply with "do"
+	if m.Content == "Jei" {
+		reply(s, m, "do")
+	}
+	
+	// If the message is "Soup" reply with "Soup store"
+	if m.Content == "Soup" {
+		reply(s, m, "https://www.youtube.com/watch?v=FAUnDDTz30k")
+	}
+	
+	// If the message is "Su" reply with "sie"
+	if m.Content == "Su" {
+		reply(s, m, "sie")
+	}
+	
+	// If the message is "Saki" reply with "Nikaido"
+	if m.Content == "Saki" {
+		reply(s, m, "Nikaido")
+	}
+	
+	// If the message is "Pi" reply with "ers"
+	if m.Content == "Pi" {
+		reply(s, m, "ers")
+	}
+	
+	// If the message is "Fo" reply with "xy"
+	if m.Content == "Fo" {
+		reply(s, m, "xy")
+	}
+	
+	// If the message is "Coy" reply with "le"
+	if m.Content == "Coy" {
+		reply(s, m, "le")
+	}
+	
+	// If the message is "Coi" reply with "fish"
+	if m.Content == "Coi" {
+		reply(s, m, ":fish:")
+	}
+	
+	// If the message is "Mitsu" reply with "ha"
+	if m.Content == "Mitsu" {
+		reply(s, m, "ha")
+	}
+	
+	// If the message is "Carl" reply with "bot"
+	if m.Content == "Carl" {
+		reply(s, m, "bot")
+	}
+	
+	// If the message is "ge" reply with "no"
+	if m.Content == "ge" {
+		reply(s, m, "no")
+	}
+	
+	// If the message is "saka" reply with "zuki"
+	if m.Content == "saka" {
+		reply(s, m, "zuki")
+	}
+	
+	// If the message is "Emi" reply with "lia"
+	if m.Content == "Emi" {
+		reply(s, m, "lia")
+	}
+	
+	// If the message is "fu" reply with "to"
+	if m.Content == "fu" {
+		reply(s, m, "to")
+	}
+	
+	// If the message is "nya" reply with "Nya~"
+	if m.Content == "nya" {
+		reply(s, m, "Nya~")
 	}
 
-	if mat := regexWaifuAffection.FindStringSubmatch(m.Content); mat != nil {
-		affectionVerb := mat[1]
-		spouseOrName := mat[4]
-		if len(spouseOrName) == 0 {
-			return
-		}
-		if regexSpouseNB.MatchString(spouseOrName) {
-			reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
-		} else if regexSpouseMasc.MatchString(spouseOrName) {
-			reply(s, m, fmt.Sprintf("I'm sure he %ss you too!", affectionVerb))
-		} else if regexSpouseFem.MatchString(spouseOrName) {
-			reply(s, m, fmt.Sprintf("I'm sure she %ss you too!", affectionVerb))
-		} else {
-			adduserifne(m)
-			if Global.Users[m.Author.ID].Waifus != nil {
-				u := Global.Users[m.Author.ID]
-				for _, waifu := range u.Waifus {
-					if waifu.Name == spouseOrName {
-						reply(s, m, fmt.Sprintf("%s %ss you too!", waifu.Name, affectionVerb))
-						return
-					}
-				}
+	// If the message is "sumi" reply with "reko"
+	if m.Content == "sumi" {
+		reply(s, m, "reko")
+	}
+	
+	// If the message is "Mon" reply with "ika"
+	if m.Content == "Mon" {
+		reply(s, m, "ika")
+	}
+
+	// If the message is "ayy" reply with "lmao"
+	if m.Content == "ayy" {
+		reply(s, m, "lmao")
+	}
+	
+	// If the message is "awoo" reply with "awoo"
+	if m.Content == "awoo" {
+		reply(s, m, "awoo")
+	}
+	
+	// If the message is "unyu" reply with "unyu~"
+	if m.Content == "unyu" {
+		reply(s, m, "unyu~")
+	}
+	
+	// If the message is "ri" reply with "na"
+	if m.Content == "ri" {
+		reply(s, m, "na")
+	}
+	
+	// If the message is "Mar" reply with "nie"
+	if m.Content == "Mar" {
+		reply(s, m, "nie")
+	}
+	
+	// If the message is "lewd" reply with "lewd gif"
+	if m.Content == "lewd" {
+		reply(s, m, "https://tenor.com/Xlv1.gif")
+	}
+	
+	// If the message is "Mari" reply with "sa"
+	if m.Content == "Mari" {
+		reply(s, m, "sa")
+	}
+	
+		// If the message is "Megu" reply with "min"
+	if m.Content == "Megu" {
+		reply(s, m, "min")
+	}
+	
+	// If the message is "Fu" reply with "taba"
+	if m.Content == "Fu" {
+		reply(s, m, "taba")
+	}
+	
+	// If the message is "Plush" reply with "ika"
+	if m.Content == "Plush" {
+		reply(s, m, "ika")
+	}
+	
+
+	
+	// Informal standard
+	if m.Content == ".bots" {
+		reply(s, m, "EmiBot reporting in! [Golang] https://github.com/EmiSu9999/EmiBot")
+	}
+	
+	if mat := regexWaifuAffection.FindStringSubmatch(m.Content); mat != nil { 
+			affectionVerb := mat[1] 
+			spouseOrName := mat[4]
+			if len(spouseOrName) == 0 { 
+					return
 			}
-		}
+			if regexSpouseMulti.MatchString(spouseOrName) {
+					reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
+			} else if regexSpouseNB.MatchString(spouseOrName) {
+					reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
+			} else if regexSpouseMasc.MatchString(spouseOrName) { 
+					reply(s, m, fmt.Sprintf("I'm sure he %ss you too!", affectionVerb))
+			} else if regexSpouseFem.MatchString(spouseOrName) { 
+					reply(s, m, fmt.Sprintf("I'm sure she %ss you too!", affectionVerb))
+			} else {
+					adduserifne(m)
+					if Global.Users[m.Author.ID].Waifus != nil { 
+							u := Global.Users[m.Author.ID] 
+							for _, waifu := range u.Waifus { 
+									if waifu.Name == spouseOrName { 
+											reply(s, m, fmt.Sprintf("%s %ss you too!", waifu.Name, affectionVerb)) 
+											return
+									}
+							}
+					}
+			}
 	}
 
 	if len(m.Content) > len(Global.CommandPrefix) {
