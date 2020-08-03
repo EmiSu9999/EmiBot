@@ -863,7 +863,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Check if CustomResponses map contains message, reply with the according value if so
 	// response contains the actual response, whole found is used to determine if key exists in the first place
-	if response, found := CustomResponses[m.Content]; found {
+	if response, found := CustomResponses[strings.Title(m.Content)]; found {
 		reply(s, m, response)
 	}
 
