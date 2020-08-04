@@ -94,7 +94,6 @@ var ChildReverseComforts []string
 var CustomResponses map[string]string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
-	fmt.Printf("me -> %s: %s\n", m.ChannelID, msg)
 	_, _ = s.ChannelMessageSend(m.ChannelID, msg)
 }
 
@@ -553,7 +552,6 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
-		fmt.Println(m.Author.ID, spouse, wname)
 		SaveGlobal()
 	}
 }
@@ -855,12 +853,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	ch, err := s.Channel(m.ChannelID)
-	if err != nil {
-		logMsg("[%s] %s (%s) -> %s: %s\n", "unknown guild", m.Author.Username, m.Author.ID, m.ChannelID, m.Content)
-	} else {
-		logMsg("[%s] %s (%s) -> %s (%s): %s\n", ch.GuildID, m.Author.Username, m.Author.ID, ch.Name, m.ChannelID, m.Content)
-	}
+	/*
+		ch, err := s.Channel(m.ChannelID)
+		if err != nil {
+			logMsg("[%s] %s (%s) -> %s: %s\n", "unknown guild", m.Author.Username, m.Author.ID, m.ChannelID, m.Content)
+		} else {
+			logMsg("[%s] %s (%s) -> %s (%s): %s\n", ch.GuildID, m.Author.Username, m.Author.ID, ch.Name, m.ChannelID, m.Content)
+		}
+	*/
 
 	// Check if CustomResponses map contains message, reply with the according value if so
 	// response contains the actual response, whole found is used to determine if key exists in the first place
