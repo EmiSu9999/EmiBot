@@ -724,7 +724,6 @@ func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
 func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
-	CustomResponses = make(map[string]string)
 	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
 	addCommand(waifuDel, "Delete a previously registered waifu", "waifudel", "husbandodel", "spousedel")
 	addCommand(childDel, "Delete a previously registered child", "daughterdel", "sondel", "childdel")
@@ -752,6 +751,8 @@ func init() {
 	InitGlobal()
 	InitComforts()
 	InitCustomResponses()
+
+	AttachWatcher()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.StringVar(&AdminID, "a", "", "Admin's Discord ID")
