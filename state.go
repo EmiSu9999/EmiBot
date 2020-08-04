@@ -97,27 +97,30 @@ func handleReload(filename string) {
 	var err error = nil      // Used for error handling/ notifying of errors
 	var changed bool = false // Used to check if the file altered was among the important ones
 
+	// Windows filewatcher sets "xy.json" as name, while Linux uses "./xy.json". This solves that.
+	filename = strings.ReplaceAll(filename, "./", "")
+
 	switch filename {
 
-	case "./custom_responses.json":
+	case "custom_responses.json":
 		fmt.Printf("Reloading %s. If file is malformed, old set will be kept...\n", filename)
 		err = InitCustomResponses()
 		changed = true
 		break
 
-	case "./comforts.json":
+	case "comforts.json":
 		fmt.Printf("Reloading %s. If file is malformed, old set will be kept...\n", filename)
 		err = LoadComfortsList(filename, &Comforts)
 		changed = true
 		break
 
-	case "./childcomforts.json":
+	case "childcomforts.json":
 		fmt.Printf("Reloading %s. If file is malformed, old set will be kept...\n", filename)
 		err = LoadComfortsList(filename, &ChildComforts)
 		changed = true
 		break
 
-	case "./childrcomforts.json":
+	case "childrcomforts.json":
 		fmt.Printf("Reloading %s. If file is malformed, old set will be kept...\n", filename)
 		err = LoadComfortsList(filename, &ChildReverseComforts)
 		changed = true
