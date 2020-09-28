@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"regexp"
@@ -92,6 +93,7 @@ var Comforts []string
 var ChildComforts []string
 var ChildReverseComforts []string
 var CustomResponses map[string]string
+var Facts []string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
 	_, _ = s.ChannelMessageSend(m.ChannelID, msg)
@@ -749,6 +751,7 @@ func init() {
 	InitGlobal()
 	InitComforts()
 	InitCustomResponses()
+	InitFacts()
 
 	AttachWatcher()
 
@@ -868,6 +871,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		reply(s, m, response)
 	}
 
+	if m.Content == "fact pls" || m.Content == "fact ples" {
+		reply(s, m, fetchRandomFact())
+	}
+
 	if mat := regexWaifuAffection.FindStringSubmatch(m.Content); mat != nil {
 		affectionVerb := mat[1]
 		spouseOrName := mat[4]
@@ -909,4 +916,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 	fmt.Printf("%+v\n", m.Message)
+}
+
+// Fetch random fact from list
+func fetchRandomFact() string {
+	factNumber := rand.Intn(len(Facts))
+	return Facts[factNumber]
 }
