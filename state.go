@@ -53,6 +53,27 @@ func InitComforts() {
 	}
 }
 
+// For later reloading of facts
+func LoadFacts(filename string, list interface{}) error {
+	f, err := os.Open(filename)
+	if err == nil {
+		dec := json.NewDecoder(f)
+		err = dec.Decode(list)
+		f.Close()
+	}
+
+	return err
+}
+
+// Load facts from facts.json into Facts array. Add placeholder if file can not be loaded.
+func InitFacts() {
+	err := LoadFacts("facts.json", &Facts)
+	if err != nil {
+		fmt.Println(err.Error(), ", Added placeholder fact")
+		Facts = []string{"Facts were not loaded for some reason... but here's one: I love Emilia!"}
+	}
+}
+
 // Loads custom_responses.json and parses custom responses to given user input for later use
 func InitCustomResponses() error {
 	// Filenames could be pulled out into a config file in the long run...
@@ -123,6 +144,11 @@ func handleReload(filename string) {
 	case "childrcomforts.json":
 		fmt.Printf("Reloading %s. If file is malformed, old set will be kept...\n", filename)
 		err = LoadComfortsList(filename, &ChildReverseComforts)
+		changed = true
+		break
+	case "facts.json":
+		fmt.Printf("Reloading %s. If file is malformed, old set will be kept...\n", filename)
+		err = LoadFacts(filename, &Facts)
 		changed = true
 		break
 
