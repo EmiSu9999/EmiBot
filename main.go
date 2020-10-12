@@ -60,6 +60,8 @@ type BotWaifu struct {
 	Picture string
 	Tag     string
 	Theme   string
+	Anni    time.Time
+	Bday    time.Time
 }
 
 func (b *BotWaifu) GetName() string { return b.Name }
@@ -245,26 +247,38 @@ func getSpouseString(u *BotUser) string {
 	} else if len(u.Waifus) == 1 {
 		pic := ""
 		if wifu.Picture != "" {
-			pic = " (" + wifu.Picture + ")"
+			pic = "\nPicture: " + wifu.Picture
 		}
 		if wifu.Theme != "" {
-			pic += " =~{ " + wifu.Theme + " }~="
+			pic += "\nTheme: " + wifu.Theme + ""
+		}
+		if !wifu.Anni.IsZero() {
+			pic += "\nAnniversary: " + wifu.Anni.Format(shortForm)
+		}
+		if !wifu.Bday.IsZero() {
+			pic += "\nBirthday: " + wifu.Bday.Format(shortForm)
 		}
 		ret = fmt.Sprintf(
-			"According to the databanks, %s's %s is %s%s\n",
+			"According to the databanks, %s's %s is %s.%s\n",
 			u.Nickname, Spouse[wifu.Gender], wifu.Name, pic)
 	} else {
 		ret = fmt.Sprintf("%s has %d spouses:\n", u.Nickname, len(u.Waifus))
 		for i, waifu := range u.Waifus {
 			pic := ""
 			if waifu.Picture != "" {
-				pic = " (" + waifu.Picture + ")"
+				pic = "\nPicture: " + waifu.Picture
 			}
 			if waifu.Theme != "" {
-				pic += " =~{ " + waifu.Theme + " }~="
+				pic += "\nTheme: " + waifu.Theme
+			}
+			if !waifu.Anni.IsZero() {
+				pic += "\nAnniversary: " + waifu.Anni.Format(shortForm)
+			}
+			if !waifu.Bday.IsZero() {
+				pic += "\nBirthday: " + wifu.Bday.Format(shortForm)
 			}
 			ret += fmt.Sprintf(
-				"%d) %s %s, %s%s\n", i+1,
+				"%d) %s %s, %s.%s\n", i+1,
 				pp[u.Gender], Spouse[waifu.Gender], waifu.Name, pic)
 		}
 	}
@@ -495,6 +509,172 @@ func childDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+const shortForm = "2006-01-02"
+
+// Hairy date code approaching. Patches welcome, but I won't fix it myself.
+func prettyDate(date time.Time) string {
+	now := time.Now()
+	ret := date.Format(shortForm) + "."
+
+	since := now.Sub(date)
+	days := since.Hours() / 24
+	ret += fmt.Sprintf("\nThat's %d days ago - roughly %d year(s) and %d day(s)!", int(days), int(days/365.25), int(days)%365)
+
+	nextDate, _ := time.Parse(shortForm, fmt.Sprintf("%4d-%02d-%02d", now.Year(), date.Month(), date.Day()))
+	if !nextDate.After(now) {
+		nextDate, _ = time.Parse(shortForm, fmt.Sprintf("%4d-%02d-%02d", now.Year()+1, date.Month(), date.Day()))
+	}
+	until := nextDate.Sub(now)
+	days = until.Hours() / 24
+	ret += fmt.Sprintf("\nIt will next occur on %s - %d days away!", nextDate.Format(shortForm), int(days))
+
+	return ret
+}
+
+func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname && !waifu.Anni.IsZero() {
+					reply(s, m, "Your anniversary with " + waifu.Name+" is "+prettyDate(waifu.Anni))
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname && !c.Anni.IsZero() {
+					reply(s, m, "Your anniversary with " + c.Name+" is "+prettyDate(c.Anni))
+					return
+				}
+			}
+		}
+
+		reply(s, m, "Not found, or date not set. Use waifuReg and anniReg")
+	} else {
+		reply(s, m, "Please tell me whose date you want to know!")
+	}
+}
+
+func anniReg(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 2 {
+		var dateS string = words[1]
+		if dateS == "" {
+			reply(s, m, "Please provide a date (anni YYYY-MM-DD waifu name)")
+			return
+		}
+
+		date, err := time.Parse(shortForm, dateS)
+		if err != nil {
+			reply(s, m, "Please provide the date in YYYY-MM-DD form: "+err.Error())
+			return
+		}
+
+		var wname string = strings.Join(words[2:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname {
+					reply(s, m, "Adding the date...")
+					waifu.Anni = date
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname {
+					reply(s, m, "Adding the date...")
+					c.Anni = date
+					return
+				}
+			}
+		}
+	}
+}
+
+func bday(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname && !waifu.Anni.IsZero() {
+					reply(s, m, waifu.Name+"'s birthday is "+prettyDate(waifu.Bday))
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname && !c.Anni.IsZero() {
+					reply(s, m, c.Name+"'s birthday is "+prettyDate(c.Bday))
+					return
+				}
+			}
+		}
+
+		reply(s, m, "Not found, or date not set. Use waifuReg and bdayReg")
+	} else {
+		reply(s, m, "Please tell me whose date you want to know!")
+	}
+}
+
+func bdayReg(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 2 {
+		var dateS string = words[1]
+		if dateS == "" {
+			reply(s, m, "Please provide a date (bdayreg YYYY-MM-DD waifu name)")
+			return
+		}
+
+		date, err := time.Parse(shortForm, dateS)
+		if err != nil {
+			reply(s, m, "Please provide the date in YYYY-MM-DD form: "+err.Error())
+			return
+		}
+
+		var wname string = strings.Join(words[2:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname {
+					reply(s, m, "Adding the date...")
+					waifu.Bday = date
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname {
+					reply(s, m, "Adding the date...")
+					c.Bday = date
+					return
+				}
+			}
+		}
+	}
+}
+
 func waifuPicAdd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
@@ -546,16 +726,24 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Waifus == nil {
 			Global.Users[m.Author.ID].Waifus = []*BotWaifu{
-				&BotWaifu{wname, gen, "", "", ""},
+				newWaifu(wname, gen),
 			}
 		} else {
 			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
-				&BotWaifu{wname, gen, "", "", ""})
+				newWaifu(wname, gen))
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
+		fmt.Println(m.Author.ID, spouse, wname)
 		SaveGlobal()
 	}
+}
+
+func newWaifu(name string, gen byte) *BotWaifu {
+	ret := &BotWaifu{}
+	ret.Name = name
+	ret.Gender = gen
+	return ret
 }
 
 func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -573,11 +761,11 @@ func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Children == nil {
 			Global.Users[m.Author.ID].Children = []*BotWaifu{
-				&BotWaifu{wname, gen, "", "", ""},
+				newWaifu(wname, gen),
 			}
 		} else {
 			Global.Users[m.Author.ID].Children = append(
-				Global.Users[m.Author.ID].Children, &BotWaifu{wname, gen, "", "", ""})
+				Global.Users[m.Author.ID].Children, newWaifu(wname, gen))
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, child, wname))
@@ -724,6 +912,11 @@ func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
 func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
+	
+	addCommand(bday, "Show a birthday", "bday")
+	addCommand(bdayReg, "Register a birthday (YYYY-MM-DD)", "bdayreg")
+	addCommand(anni, "Show your anniversary", "anni")
+	addCommand(anniReg, "Register your anniversary (YYYY-MM-DD)", "annireg")
 	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
 	addCommand(waifuDel, "Delete a previously registered waifu", "waifudel", "husbandodel", "spousedel")
 	addCommand(childDel, "Delete a previously registered child", "daughterdel", "sondel", "childdel")
