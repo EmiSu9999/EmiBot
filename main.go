@@ -304,16 +304,19 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 func getChildString(u *BotUser, child *BotWaifu) string {
 	pic := ""
 	if child.Picture != "" {
-		pic = "(" + child.Picture + ")"
+		pic = "\nPicture: " + child.Picture
 	}
 	if child.Theme != "" {
-		if pic != "" {
-			pic += " "
-		}
-		pic += "=~{ " + child.Theme + " }~="
+		pic += "\nTheme " + child.Theme
+	}
+	if !child.Anni.IsZero() {
+		pic += "\nAnniversary: " + child.Anni.Format(shortForm)
+	}
+	if !child.Bday.IsZero() {
+		pic += "\nBirthday: " + child.Bday.Format(shortForm)
 	}
 	return fmt.Sprintf(
-		"\n%s %s, %s %s",
+		"\n%s %s, %s.%s",
 		pp[u.Gender], Child[child.Gender], child.Name, pic)
 }
 
