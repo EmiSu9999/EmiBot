@@ -89,6 +89,8 @@ type BotCmd func(*discordgo.Session, *discordgo.MessageCreate)
 
 var Global BotState
 
+var Blacklist map[string][]string
+
 var Commands map[string]BotCmd
 var Usages map[string]string
 var Comforts []string
@@ -99,6 +101,27 @@ var Facts []string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
 	_, _ = s.ChannelMessageSend(m.ChannelID, msg)
+}
+
+func replyImage(s *discordgo.Session, m *discordgo.MessageCreate, tag string) {
+	picture := ""
+	failed := true
+
+	for i := 0; i < 10; i++ {
+		picture = fetchImageDanbooru(tag)
+		if checkBlacklist(m.Author, picture) {
+			picture = "Sorry, no non-blacklisted, picture was found in 10 tries. Please try again, or contact the bot admin if the problem persists."
+		} else {
+			failed = false
+			break
+		}
+	}
+
+	message, error := s.ChannelMessageSend(m.ChannelID, picture)
+	if error == nil && !failed {
+		s.MessageReactionAdd(message.ChannelID, message.ID, "🚫")
+		watchReactions(s, message, m.Author, picture)
+	}
 }
 
 func adduserifne(m *discordgo.MessageCreate) {
@@ -152,7 +175,7 @@ func getWaifuPic(s *discordgo.Session, m *discordgo.MessageCreate) {
 				if wifu.Tag == "" {
 					reply(s, m, fmt.Sprintf("Set a tag to use when looking for pictures of %s - &tag some_tag %s", wname, wname))
 				} else {
-					reply(s, m, fetchImageDanbooru(wifu.Tag))
+					replyImage(s, m, wifu.Tag)
 				}
 			}
 		}
@@ -161,7 +184,7 @@ func getWaifuPic(s *discordgo.Session, m *discordgo.MessageCreate) {
 				if wifu.Tag == "" {
 					reply(s, m, fmt.Sprintf("Set a tag to use when looking for pictures of %s - &tag some_tag %s", wname, wname))
 				} else {
-					reply(s, m, fetchImageDanbooru(wifu.Tag))
+					replyImage(s, m, wifu.Tag)
 				}
 			}
 		}
@@ -180,7 +203,7 @@ func getWaifuPic(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if len(tags) == 0 {
 			reply(s, m, "Either you don't have any family members set, or none of your family members have danbooru tags.")
 		} else {
-			reply(s, m, fetchImageDanbooru(randoms(tags)))
+			replyImage(s, m, randoms(tags))
 		}
 	}
 }
@@ -543,7 +566,7 @@ func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
 			u := Global.Users[m.Author.ID]
 			for _, waifu := range u.Waifus {
 				if waifu.Name == wname && !waifu.Anni.IsZero() {
-					reply(s, m, "Your anniversary with " + waifu.Name+" is "+prettyDate(waifu.Anni))
+					reply(s, m, "Your anniversary with "+waifu.Name+" is "+prettyDate(waifu.Anni))
 					return
 				}
 			}
@@ -553,7 +576,7 @@ func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
 			u := Global.Users[m.Author.ID]
 			for _, c := range u.Children {
 				if c.Name == wname && !c.Anni.IsZero() {
-					reply(s, m, "Your anniversary with " + c.Name+" is "+prettyDate(c.Anni))
+					reply(s, m, "Your anniversary with "+c.Name+" is "+prettyDate(c.Anni))
 					return
 				}
 			}
@@ -915,7 +938,7 @@ func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
 func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
-	
+
 	addCommand(bday, "Show a birthday", "bday")
 	addCommand(bdayReg, "Register a birthday (YYYY-MM-DD)", "bdayreg")
 	addCommand(anni, "Show your anniversary", "anni")
@@ -948,7 +971,7 @@ func init() {
 	InitComforts()
 	InitCustomResponses()
 	InitFacts()
-
+	InitBlacklist()
 	AttachWatcher()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")

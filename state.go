@@ -25,6 +25,20 @@ func InitGlobal() {
 	}
 }
 
+func InitBlacklist() {
+	f, err := os.Open("blacklist.json")
+	if err == nil {
+		dec := json.NewDecoder(f)
+		if err = dec.Decode(&Blacklist); err != nil {
+			fmt.Println(err.Error(), ", using a blank blacklist for now.")
+			Blacklist = make(map[string][]string)
+		}
+	} else {
+		fmt.Println(err.Error(), ", using a blank db for now.")
+		Blacklist = make(map[string][]string)
+	}
+}
+
 func LoadComfortsList(filename string, list interface{}) error {
 	f, err := os.Open(filename)
 	if err == nil {
@@ -208,6 +222,19 @@ func SaveGlobal() {
 			fmt.Println(err.Error())
 		} else {
 			f.Write(data)
+		}
+	} else {
+		fmt.Println(err.Error())
+	}
+
+	blacklist, err := os.Create("blacklist.json")
+	if err == nil {
+		defer blacklist.Close()
+		data, err := json.MarshalIndent(&Blacklist, "", "\t")
+		if err != nil {
+			fmt.Println(err.Error(), " On BLACKLIST write")
+		} else {
+			blacklist.Write(data)
 		}
 	} else {
 		fmt.Println(err.Error())

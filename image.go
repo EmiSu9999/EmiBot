@@ -5,8 +5,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
 )
+
+var lock sync.Mutex
 
 func fetchImageDanbooru(tag string) string {
 	if Global.DanbooruLogin == "" || Global.DanbooruAPIKey == "" {
@@ -78,4 +83,64 @@ func imageLinkForJson(b []byte) string {
 	default:
 		return "Malformed json data (wrong type for file_url; was expecting string)"
 	}
+}
+
+func watchReactions(session *discordgo.Session, message *discordgo.Message, requester *discordgo.User, msg string) {
+	// GO Routine
+	go func() {
+		for i := 0; i < 31; i++ { // Watch Message for 30 seconds
+			users, _ := session.MessageReactions(message.ChannelID, message.ID, "🚫", 100, "", "")
+			for _, user := range users {
+				if user.ID == requester.ID {
+					session.ChannelMessageDelete(message.ChannelID, message.ID)
+					promptBlacklist(session, message, requester, msg) // After deleting message, ask user if they want to blacklist it
+					return
+				}
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+}
+
+func promptBlacklist(session *discordgo.Session, message *discordgo.Message, requester *discordgo.User, msg string) {
+	prompt := requester.Mention() + " React with 👍 if you wish to blacklist the deleted image"
+	deletePrompt, error := session.ChannelMessageSend(message.ChannelID, prompt)
+	if error == nil {
+		session.MessageReactionAdd(deletePrompt.ChannelID, deletePrompt.ID, "👍")
+		for j := 0; j < 31; j++ {
+			users, _ := session.MessageReactions(deletePrompt.ChannelID, deletePrompt.ID, "👍", 100, "", "")
+			for _, user := range users {
+				if user.ID == requester.ID {
+					addToBlacklist(requester, msg)
+					session.ChannelMessageSend(message.ChannelID, "Successfully added to blacklist.")
+					return
+				}
+			}
+		}
+	}
+}
+
+func addToBlacklist(user *discordgo.User, msg string) {
+	lock.Lock()
+	if val, ok := Blacklist[user.ID]; ok {
+		Blacklist[user.ID] = append(val, msg)
+	} else {
+		Blacklist[user.ID] = []string{msg}
+	}
+	lock.Unlock()
+}
+
+func checkBlacklist(user *discordgo.User, msg string) bool {
+	lock.Lock()
+	if val, ok := Blacklist[user.ID]; ok {
+		for _, entry := range Blacklist[user.ID] {
+			if entry == msg {
+				lock.Unlock()
+				return true
+			}
+		}
+		Blacklist[user.ID] = append(val, msg)
+	}
+	lock.Unlock()
+	return false
 }
