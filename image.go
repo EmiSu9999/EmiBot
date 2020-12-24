@@ -132,14 +132,13 @@ func addToBlacklist(user *discordgo.User, msg string) {
 
 func checkBlacklist(user *discordgo.User, msg string) bool {
 	lock.Lock()
-	if val, ok := Blacklist[user.ID]; ok {
+	if _, ok := Blacklist[user.ID]; ok {
 		for _, entry := range Blacklist[user.ID] {
 			if entry == msg {
 				lock.Unlock()
 				return true
 			}
 		}
-		Blacklist[user.ID] = append(val, msg)
 	}
 	lock.Unlock()
 	return false
