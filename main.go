@@ -124,6 +124,42 @@ func replyImage(s *discordgo.Session, m *discordgo.MessageCreate, tag string) {
 	}
 }
 
+func orphanRoles(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	members, errMembers := s.GuildMembers(m.GuildID, "", 0)
+	roles, errRoles := s.GuildRoles(m.GuildID)
+
+	// Redneck stuff, and highly inefficient.
+	// But sadly Discord left the PR for adding an endpoint for this untouched for 5 months...
+	if errMembers == nil && errRoles == nil {
+		for _, member := range members {
+			for _, role := range member.Roles {
+				for index, guildRole := range roles {
+					if guildRole != nil && guildRole.ID == role {
+						roles[index] = nil
+						break
+					}
+				}
+			}
+		}
+
+		replyString := ""
+
+		for _, role := range roles {
+			if role != nil && !role.Managed && role.Name != "@everyone" {
+				replyString += (role.Name + "\n")
+			}
+		}
+
+		replyString += "```"
+
+		reply(s, m, "```Orphaned Roles:\n\n"+replyString)
+	} else {
+		reply(s, m, "Either the Bot has insufficient privileges, or this is not a server")
+	}
+
+}
+
 func adduserifne(m *discordgo.MessageCreate) {
 	if Global.Users[m.Author.ID] == nil {
 		ret := new(BotUser)
@@ -961,6 +997,7 @@ func init() {
 	addCommand(addCPrompt, "Adds a kidfu-related comfort prompt to the bot", "cprompt", "caddprompt")
 	addCommand(themeAddOrGet, "Set or get your waifu or child's theme, e.g. &theme https://www.youtube.com/watch?v=U_CfriU4Cng Miku", "theme")
 	addCommand(postInvite, "Posts an invite to EmiBot's own server", "invite")
+	addCommand(orphanRoles, "Lists orphaned server roles", "orphanroles")
 	InitGlobal()
 	InitComforts()
 	InitCustomResponses()
