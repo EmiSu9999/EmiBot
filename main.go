@@ -147,7 +147,7 @@ func orphanRoles(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		for _, role := range roles {
 			if role != nil && !role.Managed && role.Name != "@everyone" {
-				replyString += (role.Name + "\n")
+				replyString += (role.Name + " - " + role.ID + "\n")
 			}
 		}
 
