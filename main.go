@@ -126,7 +126,7 @@ func replyImage(s *discordgo.Session, m *discordgo.MessageCreate, tag string) {
 
 func orphanRoles(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	members, errMembers := s.GuildMembers(m.GuildID, "", 0)
+	members, errMembers := s.GuildMembers(m.GuildID, "", 1000)
 	roles, errRoles := s.GuildRoles(m.GuildID)
 
 	// Redneck stuff, and highly inefficient.
