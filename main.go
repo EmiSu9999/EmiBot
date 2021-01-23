@@ -157,7 +157,6 @@ func orphanRoles(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else {
 		reply(s, m, "Either the Bot has insufficient privileges, or this is not a server")
 	}
-
 }
 
 func adduserifne(m *discordgo.MessageCreate) {
@@ -767,6 +766,38 @@ func waifuPicAdd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func waifuPicRemove(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname {
+					reply(s, m, fmt.Sprintf("Removing picture of %s",
+						wname))
+					waifu.Picture = ""
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname {
+					reply(s, m, fmt.Sprintf("Removing picture of %s",
+						wname))
+					c.Picture = ""
+					return
+				}
+			}
+		}
+	}
+	reply(s, m, "Please add the name of the family member to remove the picture from!")
+}
+
 func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
@@ -998,6 +1029,7 @@ func init() {
 	addCommand(themeAddOrGet, "Set or get your waifu or child's theme, e.g. &theme https://www.youtube.com/watch?v=U_CfriU4Cng Miku", "theme")
 	addCommand(postInvite, "Posts an invite to EmiBot's own server", "invite")
 	addCommand(orphanRoles, "Lists orphaned server roles", "orphanroles")
+	addCommand(waifuPicRemove, "Removes a picture from a family member", "picremove")
 	InitGlobal()
 	InitComforts()
 	InitCustomResponses()
