@@ -39,6 +39,34 @@ func InitBlacklist() {
 	}
 }
 
+func InitSpotlights() {
+	f, err := os.Open("spotlights.json")
+	if err == nil {
+		dec := json.NewDecoder(f)
+		if err = dec.Decode(&Spotlights); err != nil {
+			fmt.Println(err.Error(), ", spotlights incorrectly set up.")
+			Spotlights = make(map[string] string)
+		}
+	} else {
+		fmt.Println(err.Error(), ", no spotlights set up.")
+		Spotlights = make(map[string] string)
+	}
+}
+
+func InitSpotlightEntries(filename string) {
+	f, err := os.Open(filename)
+	if err == nil {
+		dec := json.NewDecoder(f)
+		if err = dec.Decode(&SpotlightEntries); err != nil {
+			fmt.Println(err.Error(), ", using a blank spotlight db for now.")
+			SpotlightEntries = make(map[string]*SpotlightUser)
+		}
+	} else {
+		fmt.Println(err.Error(), ", using a blank spotlight db for now.")
+		SpotlightEntries = make(map[string]*SpotlightUser)
+	}
+}
+
 func LoadComfortsList(filename string, list interface{}) error {
 	f, err := os.Open(filename)
 	if err == nil {

@@ -75,6 +75,21 @@ type BotUser struct {
 	Intro    string
 }
 
+type SpotlightEntry struct {
+	Name string
+	Type string
+	Picture string
+	Banner string
+	Text string
+	Done bool
+}
+
+type SpotlightUser struct {
+	Entries []*SpotlightEntry
+	Left bool
+}
+
+
 func (b *BotUser) GetName() string { return b.Nickname }
 func (b *BotUser) GetGender() byte { return b.Gender }
 
@@ -88,8 +103,11 @@ type BotState struct {
 type BotCmd func(*discordgo.Session, *discordgo.MessageCreate)
 
 var Global BotState
+var Spotlights map[string] string
+var SpotlightEntries map[string] * SpotlightUser
 
 var Blacklist map[string][]string
+
 
 var Commands map[string]BotCmd
 var Usages map[string]string
@@ -996,6 +1014,11 @@ func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
 	reply(s, m, "https://discord.gg/ZmqQGAK")
 }
 
+func spotlightConfigTest(s *discordgo.Session, m *discordgo.MessageCreate) {
+	fmt.Println("TEST")
+	_, _ = s.ChannelMessageSend(Spotlights["channel"], "TEST SUCCESSFUL")
+}
+
 func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
@@ -1030,11 +1053,15 @@ func init() {
 	addCommand(postInvite, "Posts an invite to EmiBot's own server", "invite")
 	addCommand(orphanRoles, "Lists orphaned server roles", "orphanroles")
 	addCommand(waifuPicRemove, "Removes a picture from a family member", "picremove")
+
+	addCommand(spotlightConfigTest, "Removes a picture from a family member", "configtest")
+
 	InitGlobal()
 	InitComforts()
 	InitCustomResponses()
 	InitFacts()
 	InitBlacklist()
+	InitSpotlights()
 	AttachWatcher()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
