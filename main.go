@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/robfig/cron"
 )
 
 // Variables used for command line parameters
@@ -103,6 +104,7 @@ type BotCmd func(*discordgo.Session, *discordgo.MessageCreate)
 var Global BotState
 var Spotlights map[string]string
 var SpotlightEntries map[string]*SpotlightEntry
+var session *discordgo.Session
 
 var Blacklist map[string][]string
 
@@ -1011,14 +1013,17 @@ func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
 	reply(s, m, "https://discord.gg/ZmqQGAK")
 }
 
-func spotlightConfigTest(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID != "271682063697051658" { // Temp
-		return
-	}
+func runSpotlight() {
+
+	fmt.Println("RUNNING SPOTLIGHT")
 
 	entry := random_spotlight()
 	if entry != nil {
-		member, _ := s.GuildMember(Spotlights["guild"], entry.User)
+		member, err := session.GuildMember(Spotlights["guild"], entry.User)
+
+		if err != nil {
+			fmt.Println("Error receiving user")
+		}
 
 		mention := ""
 		if member != nil {
@@ -1031,20 +1036,20 @@ func spotlightConfigTest(s *discordgo.Session, m *discordgo.MessageCreate) {
 		message := "Todays spotlight is " + entry.Name + " the " + entry.Type + " of " + mention + ". "
 		message += "Here is what they have to say about them: "
 
-		_, _ = s.ChannelMessageSend(Spotlights["channel"], message)
+		_, _ = session.ChannelMessageSend(Spotlights["channel"], message)
 
 		description := "" + entry.Text
 
 		if len(description) >= 1999 {
 			temp := strings.Split(description, `#`)
 			for i := 0; i < len(temp); i++ {
-				_, _ = s.ChannelMessageSend(Spotlights["channel"], temp[i])
+				_, _ = session.ChannelMessageSend(Spotlights["channel"], temp[i])
 			}
 		} else {
-			_, _ = s.ChannelMessageSend(Spotlights["channel"], description)
+			_, _ = session.ChannelMessageSend(Spotlights["channel"], description)
 		}
 
-		_, _ = s.ChannelMessageSend(Spotlights["channel"], entry.Picture)
+		_, _ = session.ChannelMessageSend(Spotlights["channel"], entry.Picture)
 
 		entry.Done = true
 		SaveSpotlights()
@@ -1083,7 +1088,7 @@ func spotlightConfigTest(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var params discordgo.GuildParams
 		params.Banner = base64Encoding
 
-		_, err = s.GuildEdit(Spotlights["guild"], params)
+		_, err = session.GuildEdit(Spotlights["guild"], params)
 		if err != nil {
 			fmt.Println("Error setting banner")
 			return
@@ -1135,8 +1140,6 @@ func init() {
 	addCommand(orphanRoles, "Lists orphaned server roles", "orphanroles")
 	addCommand(waifuPicRemove, "Removes a picture from a family member", "picremove")
 
-	addCommand(spotlightConfigTest, "Removes a picture from a family member", "configtest")
-
 	InitGlobal()
 	InitComforts()
 	InitCustomResponses()
@@ -1175,6 +1178,8 @@ func main() {
 		return
 	}
 
+	session = dg
+
 	// Get the account information.
 	u, err := dg.User("@me")
 	if err != nil {
@@ -1194,6 +1199,10 @@ func main() {
 		fmt.Println("error opening connection,", err)
 		return
 	}
+
+	c := cron.New()
+	c.AddFunc("0 "+Spotlights["time"]+" * * *", runSpotlight)
+	c.Start()
 
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sigchan := make(chan os.Signal, 10)
