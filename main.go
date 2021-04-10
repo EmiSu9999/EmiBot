@@ -76,19 +76,14 @@ type BotUser struct {
 }
 
 type SpotlightEntry struct {
-	Name string
-	Type string
+	User    string
+	Name    string
 	Picture string
-	Banner string
-	Text string
-	Done bool
+	Banner  string
+	Text    string
+	Type    string
+	Done    bool
 }
-
-type SpotlightUser struct {
-	Entries []*SpotlightEntry
-	Left bool
-}
-
 
 func (b *BotUser) GetName() string { return b.Nickname }
 func (b *BotUser) GetGender() byte { return b.Gender }
@@ -103,11 +98,10 @@ type BotState struct {
 type BotCmd func(*discordgo.Session, *discordgo.MessageCreate)
 
 var Global BotState
-var Spotlights map[string] string
-var SpotlightEntries map[string] * SpotlightUser
+var Spotlights map[string]string
+var SpotlightEntries map[string]*SpotlightEntry
 
 var Blacklist map[string][]string
-
 
 var Commands map[string]BotCmd
 var Usages map[string]string
@@ -1015,8 +1009,52 @@ func postInvite(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func spotlightConfigTest(s *discordgo.Session, m *discordgo.MessageCreate) {
-	fmt.Println("TEST")
-	_, _ = s.ChannelMessageSend(Spotlights["channel"], "TEST SUCCESSFUL")
+	if m.Author.ID != "271682063697051658" { // Temp
+		return
+	}
+
+	entry := random_spotlight()
+	if entry != nil {
+		member, _ := s.GuildMember(Spotlights["guild"], entry.User)
+
+		mention := ""
+		if member != nil {
+			mention = member.Mention()
+		} else {
+			entry.Done = true
+			SaveSpotlights()
+			return
+		}
+		message := "Todays spotlight is " + entry.Name + " the " + entry.Type + " of " + mention + ". "
+		message += "Here is what they have to say about them: "
+
+		_, _ = s.ChannelMessageSend(Spotlights["channel"], message)
+
+		description := "" + entry.Text
+
+		if len(description) >= 1999 {
+			temp := strings.Split(description, `#`)
+			for i := 0; i < len(temp); i++ {
+				_, _ = s.ChannelMessageSend(Spotlights["channel"], temp[i])
+			}
+		} else {
+			_, _ = s.ChannelMessageSend(Spotlights["channel"], description)
+		}
+
+		_, _ = s.ChannelMessageSend(Spotlights["channel"], entry.Picture)
+
+		entry.Done = true
+		SaveSpotlights()
+	}
+}
+
+func random_spotlight() *SpotlightEntry {
+	for k := range SpotlightEntries {
+		if !SpotlightEntries[k].Done {
+			return SpotlightEntries[k]
+		}
+	}
+	return nil
 }
 
 func init() {

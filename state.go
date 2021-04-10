@@ -45,11 +45,13 @@ func InitSpotlights() {
 		dec := json.NewDecoder(f)
 		if err = dec.Decode(&Spotlights); err != nil {
 			fmt.Println(err.Error(), ", spotlights incorrectly set up.")
-			Spotlights = make(map[string] string)
+			Spotlights = make(map[string]string)
+			return
 		}
+		InitSpotlightEntries(Spotlights["filename"])
 	} else {
 		fmt.Println(err.Error(), ", no spotlights set up.")
-		Spotlights = make(map[string] string)
+		Spotlights = make(map[string]string)
 	}
 }
 
@@ -58,12 +60,12 @@ func InitSpotlightEntries(filename string) {
 	if err == nil {
 		dec := json.NewDecoder(f)
 		if err = dec.Decode(&SpotlightEntries); err != nil {
-			fmt.Println(err.Error(), ", using a blank spotlight db for now.")
-			SpotlightEntries = make(map[string]*SpotlightUser)
+			fmt.Println(err.Error(), ", format error, using a blank spotlight db for now.")
+			SpotlightEntries = make(map[string]*SpotlightEntry)
 		}
 	} else {
 		fmt.Println(err.Error(), ", using a blank spotlight db for now.")
-		SpotlightEntries = make(map[string]*SpotlightUser)
+		SpotlightEntries = make(map[string]*SpotlightEntry)
 	}
 }
 
@@ -238,6 +240,21 @@ func AttachWatcher() {
 	err = watcher.Add("./")
 	if err != nil {
 		fmt.Println(err, ", couldn't attach file watcher. Bot has to be restarted in case of changes..")
+	}
+}
+
+func SaveSpotlights() {
+	f, err := os.Create(Spotlights["filename"])
+	if err == nil {
+		defer f.Close()
+		data, err := json.MarshalIndent(&SpotlightEntries, "", "\t")
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			f.Write(data)
+		}
+	} else {
+		fmt.Println(err.Error())
 	}
 }
 
