@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/base64"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -1045,6 +1048,46 @@ func spotlightConfigTest(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		entry.Done = true
 		SaveSpotlights()
+
+		resp, err := http.Get(entry.Banner)
+		if err != nil {
+			fmt.Println("Error setting banner")
+			return
+		}
+
+		defer resp.Body.Close()
+
+		bytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error setting banner")
+			return
+		}
+
+		var base64Encoding string
+
+		// Determine the content type of the image file
+		mimeType := http.DetectContentType(bytes)
+
+		// Prepend the appropriate URI scheme header depending
+		// on the MIME type
+		switch mimeType {
+		case "image/jpeg":
+			base64Encoding += "data:image/jpeg;base64,"
+		case "image/png":
+			base64Encoding += "data:image/png;base64,"
+		}
+
+		// Append the base64 encoded output
+		base64Encoding += base64.StdEncoding.EncodeToString(bytes)
+
+		var params discordgo.GuildParams
+		params.Banner = base64Encoding
+
+		_, err = s.GuildEdit(Spotlights["guild"], params)
+		if err != nil {
+			fmt.Println("Error setting banner")
+			return
+		}
 	}
 }
 
