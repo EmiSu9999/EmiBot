@@ -1031,6 +1031,7 @@ func runSpotlight() {
 		} else {
 			entry.Done = true
 			SaveSpotlights()
+			runSpotlight()
 			return
 		}
 		message := "Todays spotlight is " + entry.Name + " the " + entry.Type + " of " + mention + ". "
